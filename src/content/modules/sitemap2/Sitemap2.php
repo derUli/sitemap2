@@ -25,103 +25,46 @@ class Sitemap2 extends Controller
 
     public function getMenu($name = "top", $parent = null, $recursive = true, $order = "position")
     {
+        $html = "";
+        $name = db_escape($name);
         $language = $_SESSION["language"];
-        $query = db_query("SELECT * FROM " . tbname("content") . " WHERE menu ='$name' AND language = '$language' AND active = 1 AND `deleted_at` IS NULL AND parent IS NULL and `type` <> 'node' and `type` <> 'snippet' and `type` <> 'link' ORDER by position");
+        $sql = "SELECT id, systemname, access, redirection, title, alternate_title, menu_image, target, type, link_to_language FROM " . tbname("content") . " WHERE menu='$name' AND language = '$language' AND active = 1 AND `deleted_at` IS NULL AND hidden = 0 and type <> 'snippet' and parent ";
         
-        $html_output = "<ul>\n";
+        if (is_null($parent)) {
+            $sql .= " IS NULL ";
+        } else {
+            $sql .= " = " . intval($parent) . " ";
+        }
+        $sql .= " ORDER by " . $order;
+        $query = db_query($sql);
+        
+        if (db_num_rows($query) == 0) {
+            return $html;
+        }
+        $containsCurrentItem = parent_item_contains_current_page($parent);
+        $html .= "<ul>\n";
+        
         while ($row = db_fetch_object($query)) {
-            $html_output .= "  <li>";
-            if (! startsWith($row->redirection, "#")) {
+            if (checkAccess($row->access)) {
+                $html .= "<li>";
+                $title = $row->title;
+                $redirection = $row->redirection;
+                if ($row->type == "language_link" && ! is_null($row->link_to_language)) {
+                    $language = new Language($row->link_to_language);
+                    $redirection = $language->getLanguageLink();
+                }
+                $html .= "<a href='" . buildSEOUrl($row->systemname, $redirection) . "'>";
+                $html .= htmlentities($title, ENT_QUOTES, "UTF-8");
+                $html .= "</a>\n";
                 
-                if (get_requested_pagename() != $row->systemname) {
-                    $html_output .= "<a href='" . buildSEOUrl($row->systemname) . "' target='" . $row->target . "'>";
-                } else {
-                    $html_output .= "<a href='" . buildSEOUrl($row->systemname) . "' target='" . $row->target . "'>";
+                if ($recursive) {
+                    $html .= $this->getMenu($name, $row->id, true, $order);
                 }
-            }
-            
-            $html_output .= $row->title;
-            if (! startsWith($row->redirection, "#")) {
-                $html_output .= "</a>\n";
-            }
-            
-            // Unterebene 1
-            $query2 = db_query("SELECT * FROM " . tbname("content") . " WHERE active = 1 AND `deleted_at` IS NULL AND language = '$language' AND parent=" . $row->id . " and `type` <> 'node' and `type` <> 'snippet' and `type` <> 'link' ORDER by position");
-            if (db_num_rows($query2) > 0) {
-                $html_output .= "<ul>\n";
-                while ($row2 = db_fetch_object($query2)) {
-                    $html_output .= "      <li>";
-                    
-                    if (! startsWith($row2->redirection, "#")) {
-                        
-                        if (get_requested_pagename() != $row2->systemname) {
-                            $html_output .= "<a href='" . buildSEOUrl($row2->systemname) . "' target='" . $row->target . "'>";
-                        } else {
-                            $html_output .= "<a href='" . buildSEOUrl($row2->systemname) . "' target='" . $row->target . "'>";
-                        }
-                    }
-                    $html_output .= $row2->title;
-                    
-                    if (! startsWith($row2->redirection, "#")) {
-                        $html_output .= '</a>';
-                    }
-                    
-                    // Unterebene 2
-                    $query3 = db_query("SELECT * FROM " . tbname("content") . " WHERE active = 1 AND `deleted_at` IS NULL AND language = '$language' AND parent=" . $row2->id . " and `type` <> 'node' and `type` <> 'snippet' and `type` <> 'link' ORDER by position");
-                    if (db_num_rows($query3) > 0) {
-                        $html_output .= "  <ul>\n";
-                        while ($row3 = db_fetch_object($query3)) {
-                            $html_output .= "      <li>";
-                            if (! startsWith($row3->redirection, "#")) {
-                                
-                                if (get_requested_pagename() != $row3->systemname) {
-                                    $html_output .= "<a href='" . buildSEOUrl($row3->systemname) . "' target='" . $row3->target . "'>";
-                                } else {
-                                    $html_output .= "<a href='" . buildSEOUrl($row3->systemname) . "' target='" . $row3->target . "'>";
-                                }
-                            }
-                            $html_output .= $row3->title;
-                            
-                            if (! startsWith($row3->redirection, "#")) {
-                                $html_output .= '</a>';
-                            }
-                            
-                            // Unterebene 3
-                            $query4 = db_query("SELECT * FROM " . tbname("content") . " WHERE active = 1 AND `deleted_at` IS NULL AND language = '$language' AND parent=" . $row3->id . " and `type` <> 'node' and `type` <> 'snippet' and `type` <> 'link' ORDER by position");
-                            if (db_num_rows($query4) > 0) {
-                                $html_output .= "  <ul>\n";
-                                while ($row4 = db_fetch_object($query4)) {
-                                    $html_output .= "<li>";
-                                    if (! startsWith($row4->redirection, "#")) {
-                                        if (get_requested_pagename() != $row4->systemname) {
-                                            $html_output .= "<a href='" . buildSEOUrl($row4->systemname) . "' target='" . $row4->target . "'>";
-                                        } else {
-                                            $html_output .= "<a href='" . buildSEOUrl($row4->systemname) . "' target='" . $row4->target . "'>";
-                                        }
-                                    }
-                                    $html_output .= $row4->title;
-                                    
-                                    if (! startsWith($row4->redirection, "#")) {
-                                        $html_output .= '</a>';
-                                    }
-                                    $html_output .= "</li>\n";
-                                }
-                                
-                                $html_output .= "  </ul></li>\n";
-                            }
-                        }
-                        $html_output .= "  </ul></li>\n";
-                    } else {
-                        $html_output .= "</li>\n";
-                    }
-                }
-                $html_output .= "  </ul></li>\n";
-            } else {
-                $html_output .= "</li>\n";
+                
+                $html .= "</li>";
             }
         }
-        
-        $html_output .= "</ul>";
-        return $html_output;
+        $html .= "</ul>";
+        return $html;
     }
 }
