@@ -7,7 +7,14 @@ if (! $controller->getShowNotInMenu() and faster_in_array("none", $menus)) {
     $menus = array_flip($menus);
 }
 ?>
-<?php foreach($menus as $menu){?>
+<?php
+foreach ($menus as $menu) {
+    
+    $items = ContentFactory::getAllByMenu($menu);
+    if (count($items) > 0) {
+        ?>
 <h3><?php translate($menu);?></h3>
 <?php echo $controller->getMenu($menu);?>
-<?php }?>
+<?php
+    }
+}
