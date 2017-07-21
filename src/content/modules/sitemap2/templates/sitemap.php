@@ -1,9 +1,9 @@
 <?php
 $menus = getAllMenus(true);
 $controller = ModuleHelper::getMainController("sitemap2");
-if (! $controller->getShowNotInMenu() and faster_in_array("none", $menus)) {
+if (! $controller->getShowNotInMenu() and faster_in_array("not_in_menu", $menus)) {
     $menus = array_flip($menus);
-    unset($menus["none"]);
+    unset($menus["not_in_menu"]);
     $menus = array_flip($menus);
 }
 ?>
