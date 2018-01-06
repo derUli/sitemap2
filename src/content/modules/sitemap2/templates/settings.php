@@ -1,8 +1,8 @@
 <?php
-$sitemap2_show_not_in_menu = Settings::get ( "sitemap2_show_not_in_menu", "bool" );
-if (get_request_method () == "POST") {
-	
-	?>
+$sitemap2_show_not_in_menu = Settings::get("sitemap2_show_not_in_menu", "bool");
+if (get_request_method() == "POST") {
+    
+    ?>
 
 <div class="alert alert-success alert-dismissable fade in">
 	<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
@@ -21,6 +21,6 @@ if (get_request_method () == "POST") {
 			value="1" <?php if($sitemap2_show_not_in_menu) echo "checked";?>><?php translate("sitemap2_show_not_in_menu");?></label>
 	</div>
 	<p>
-		<input type="submit" value="<?php translate("save");?>">
+		<button type="submit" class="btn btn-success"><?php translate("save");?></button>
 	</p>
 </form>
