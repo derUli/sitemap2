@@ -1,13 +1,7 @@
 {
-	"id": "sitemap2",
-	"version": "1.0.2",
-	"description": "New Sitemap Module for UliCMS",
-	"categories": [
-		"sitemap",
-		"html",
-		"links",
-		"seo",
-		"module"
-	],
-	"compatible_from": "2019.1.3"
+    "id": "sitemap2",
+    "version": "1.1.0",
+    "description": "New Sitemap Module for UliCMS",
+    "categories": ["sitemap", "html", "links", "seo", "module"],
+    "compatible_from": "2019.3.1"
 }

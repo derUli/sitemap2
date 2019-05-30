@@ -3,3 +3,4 @@ work/*
 .settings
 .buildpath
 .project
+nbproject

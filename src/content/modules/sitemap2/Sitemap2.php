@@ -1,70 +1,69 @@
 <?php
 
-class Sitemap2 extends Controller
-{
+use UliCMS\Models\Content\Language;
+
+class Sitemap2 extends Controller {
 
     private $moduleName = "sitemap2";
 
-    public function render()
-    {
+    public function render() {
         return Template::executeModuleTemplate($this->moduleName, "sitemap.php");
     }
 
-    public function getShowNotInMenu()
-    {
+    public function getShowNotInMenu() {
         return Settings::get("sitemap2_show_not_in_menu", "bool");
     }
 
-    public function settings()
-    {
+    public function settings() {
         if (Request::isPost()) {
             Settings::set("sitemap2_show_not_in_menu", Request::getVar("sitemap2_show_not_in_menu"), "bool");
         }
         return Template::executeModuleTemplate($this->moduleName, "settings.php");
     }
 
-    public function getMenu($name = "top", $parent = null, $recursive = true, $order = "position")
-    {
+    public function getMenu($name = "top", $parent_id = null, $recursive = true, $order = "position") {
         $html = "";
         $name = db_escape($name);
         $language = $_SESSION["language"];
-        $sql = "SELECT id, systemname, access, redirection, title, alternate_title, menu_image, target, type, link_to_language FROM " . tbname("content") . " WHERE menu='$name' AND language = '$language' AND active = 1 AND `deleted_at` IS NULL AND hidden = 0 and type <> 'snippet' and parent ";
-        
-        if (is_null($parent)) {
+        $sql = "SELECT id, slug, access, redirection, title, alternate_title, menu_image, target, type, link_to_language FROM " . tbname("content") .
+                " WHERE menu='$name' AND language = '$language' AND active = 1 AND `deleted_at` IS NULL AND hidden = 0 and type <> 'snippet' and parent_id ";
+
+        if (is_null($parent_id)) {
             $sql .= " IS NULL ";
         } else {
-            $sql .= " = " . intval($parent) . " ";
+            $sql .= " = " . intval($parent_id) . " ";
         }
         $sql .= " ORDER by " . $order;
         $query = db_query($sql);
-        
+
         if (db_num_rows($query) == 0) {
             return $html;
         }
-        $containsCurrentItem = parent_item_contains_current_page($parent);
+        $containsCurrentItem = parent_item_contains_current_page($parent_id);
         $html .= "<ul>\n";
-        
+
         while ($row = db_fetch_object($query)) {
             if (checkAccess($row->access)) {
                 $html .= "<li>";
                 $title = $row->title;
                 $redirection = $row->redirection;
-                if ($row->type == "language_link" && ! is_null($row->link_to_language)) {
+                if ($row->type == "language_link" && !is_null($row->link_to_language)) {
                     $language = new Language($row->link_to_language);
                     $redirection = $language->getLanguageLink();
                 }
-                $html .= "<a href='" . buildSEOUrl($row->systemname, $redirection) . "'>";
+                $html .= "<a href='" . buildSEOUrl($row->slug, $redirection) . "'>";
                 $html .= htmlentities($title, ENT_QUOTES, "UTF-8");
                 $html .= "</a>\n";
-                
+
                 if ($recursive) {
                     $html .= $this->getMenu($name, $row->id, true, $order);
                 }
-                
+
                 $html .= "</li>";
             }
         }
         $html .= "</ul>";
         return $html;
     }
+
 }
