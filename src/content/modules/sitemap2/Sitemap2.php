@@ -25,7 +25,7 @@ class Sitemap2 extends Controller {
         $html = "";
         $name = db_escape($name);
         $language = $_SESSION["language"];
-        $sql = "SELECT id, slug, access, redirection, title, alternate_title, menu_image, target, type, link_to_language FROM " . tbname("content") .
+        $sql = "SELECT id, slug, access, link_url, title, alternate_title, menu_image, target, type, link_to_language FROM " . tbname("content") .
                 " WHERE menu='$name' AND language = '$language' AND active = 1 AND `deleted_at` IS NULL AND hidden = 0 and type <> 'snippet' and parent_id ";
 
         if (is_null($parent_id)) {
@@ -46,7 +46,7 @@ class Sitemap2 extends Controller {
             if (checkAccess($row->access)) {
                 $html .= "<li>";
                 $title = $row->title;
-                $redirection = $row->redirection;
+                $redirection = $row->link_url;
                 if ($row->type == "language_link" && !is_null($row->link_to_language)) {
                     $language = new Language($row->link_to_language);
                     $redirection = $language->getLanguageLink();
