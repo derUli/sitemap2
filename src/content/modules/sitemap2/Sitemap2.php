@@ -46,12 +46,12 @@ class Sitemap2 extends Controller {
             if (checkAccess($row->access)) {
                 $html .= "<li>";
                 $title = $row->title;
-                $redirection = $row->link_url;
+                $link_url = $row->link_url;
                 if ($row->type == "language_link" && !is_null($row->link_to_language)) {
                     $language = new Language($row->link_to_language);
-                    $redirection = $language->getLanguageLink();
+                    $link_url = $language->getLanguageLink();
                 }
-                $html .= "<a href='" . buildSEOUrl($row->slug, $redirection) . "'>";
+                $html .= "<a href='" . buildSEOUrl($row->slug, $link_url) . "'>";
                 $html .= htmlentities($title, ENT_QUOTES, "UTF-8");
                 $html .= "</a>\n";
 
